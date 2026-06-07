@@ -1,6 +1,6 @@
 # 🛡 SENTINEL PME AFRICA
 
-> Système de détection d'intrusion intelligent pour PME camerounaises — inspiré de Wazuh
+> Système de détection d'intrusion intelligent pour PME camerounaises 
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-green?logo=fastapi)
