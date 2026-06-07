@@ -1,0 +1,22 @@
+# ══════════════════════════════════════════════════════════════════
+# SENTINEL PME AFRICA — Dependances Python
+# ══════════════════════════════════════════════════════════════════
+#
+# Installation Ubuntu Server (SOC) :
+#   pip3 install -r requirements.txt --break-system-packages
+#
+# Installation Windows (agent uniquement) :
+#   pip install psutil requests cryptography
+#
+# ══════════════════════════════════════════════════════════════════
+
+# ── Serveur SOC (Ubuntu Server 192.168.56.30) ─────────────────────
+fastapi==0.111.0
+uvicorn==0.29.0
+websockets==12.0
+python-multipart==0.0.9
+
+# ── Agent et cryptographie (Windows + Ubuntu) ─────────────────────
+psutil==5.9.8
+requests==2.31.0
+cryptography==42.0.5

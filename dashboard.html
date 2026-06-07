@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SENTINEL PME Africa — Centre d'Operations de Securite</title>
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   VARIABLES ET RESET
+══════════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #0B0F1A;
+  --surface:   #131929;
+  --surface2:  #1C2537;
+  --surface3:  #243049;
+  --border:    #2A3A55;
+  --text:      #E2E8F0;
+  --muted:     #7A8FA6;
+  --red:       #EF4444;
+  --red-dark:  #7F1D1D;
+  --orange:    #F97316;
+  --orange-dark:#7C2D12;
+  --blue:      #3B82F6;
+  --blue-dark: #1E3A8A;
+  --green:     #22C55E;
+  --green-dark:#14532D;
+  --purple:    #A855F7;
+  --teal:      #14B8A6;
+  --yellow:    #EAB308;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════════════════ */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, #1A3A5C, #0F6E56);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 0 12px rgba(15,110,86,0.4);
+}
+.logo-title { font-size: 17px; font-weight: 700; color: var(--text); }
+.logo-sub   { font-size: 11px; color: var(--muted); }
+.header-right { display: flex; align-items: center; gap: 16px; }
+.ws-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--muted);
+}
+.ws-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--red);
+  transition: background 0.3s;
+}
+.ws-dot.connected { background: var(--green); animation: pulse-dot 2s infinite; }
+@keyframes pulse-dot {
+  0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
+  50%      { opacity:0.7; box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+}
+.btn-reset {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+.btn-reset:hover { border-color: var(--red); color: var(--red); }
+.header-time { font-size: 12px; color: var(--muted); font-family: monospace; }
+
+/* ══════════════════════════════════════════════════════════════════
+   LAYOUT PRINCIPAL
+══════════════════════════════════════════════════════════════════ */
+.container { padding: 20px 24px; max-width: 1600px; margin: 0 auto; }
+
+/* ══════════════════════════════════════════════════════════════════
+   BANNIERE SCORE DE RISQUE
+══════════════════════════════════════════════════════════════════ */
+.risk-banner {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 20px 28px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  background: var(--surface);
+  transition: all 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+.risk-banner::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--green);
+  transition: background 0.5s;
+}
+.risk-banner.CRITIQUE::before { background: var(--red); }
+.risk-banner.ELEVE::before    { background: var(--orange); }
+.risk-banner.MOYEN::before    { background: var(--blue); }
+.risk-banner.CRITIQUE { border-color: var(--red);    background: linear-gradient(135deg, #131929, #1a0a0a); }
+.risk-banner.ELEVE    { border-color: var(--orange); background: linear-gradient(135deg, #131929, #1a0f08); }
+.risk-banner.MOYEN    { border-color: var(--blue);   background: linear-gradient(135deg, #131929, #08111a); }
+.risk-banner.FAIBLE   { border-color: var(--green);  background: linear-gradient(135deg, #131929, #081a0e); }
+
+.risk-gauge {
+  position: relative;
+  width: 100px; height: 100px;
+  flex-shrink: 0;
+}
+.risk-gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.risk-gauge-track { fill: none; stroke: var(--surface3); stroke-width: 8; }
+.risk-gauge-fill  {
+  fill: none; stroke: var(--green); stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 251.2;
+  stroke-dashoffset: 251.2;
+  transition: stroke-dashoffset 0.8s ease, stroke 0.5s;
+}
+.risk-gauge-fill.CRITIQUE { stroke: var(--red); }
+.risk-gauge-fill.ELEVE    { stroke: var(--orange); }
+.risk-gauge-fill.MOYEN    { stroke: var(--blue); }
+.risk-gauge-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.risk-score-num { font-size: 24px; font-weight: 800; line-height: 1; }
+.risk-score-max { font-size: 10px; color: var(--muted); }
+
+.risk-info { flex: 1; }
+.risk-label {
+  font-size: 26px; font-weight: 800; margin-bottom: 4px;
+  transition: color 0.5s;
+}
+.risk-label.CRITIQUE { color: var(--red); }
+.risk-label.ELEVE    { color: var(--orange); }
+.risk-label.MOYEN    { color: var(--blue); }
+.risk-label.FAIBLE   { color: var(--green); }
+.risk-subtitle { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+.risk-bar-section { flex: 2; }
+.risk-bar-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; display: flex; justify-content: space-between; }
+.risk-bar-track {
+  height: 8px; background: var(--surface3);
+  border-radius: 4px; overflow: hidden;
+}
+.risk-bar-fill {
+  height: 100%; background: var(--green);
+  border-radius: 4px; width: 0%;
+  transition: width 0.8s ease, background 0.5s;
+}
+.risk-bar-fill.CRITIQUE { background: linear-gradient(90deg, var(--orange), var(--red)); }
+.risk-bar-fill.ELEVE    { background: linear-gradient(90deg, var(--yellow), var(--orange)); }
+.risk-bar-fill.MOYEN    { background: linear-gradient(90deg, var(--blue), var(--teal)); }
+.risk-bar-scale {
+  display: flex; justify-content: space-between;
+  margin-top: 6px; font-size: 10px; color: var(--muted);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CARTES STATISTIQUES
+══════════════════════════════════════════════════════════════════ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: border-color 0.3s;
+}
+.stat-card:hover { border-color: var(--teal); }
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.stat-value { font-size: 28px; font-weight: 800; line-height: 1; }
+.stat-value.red    { color: var(--red); }
+.stat-value.orange { color: var(--orange); }
+.stat-value.blue   { color: var(--blue); }
+.stat-value.green  { color: var(--green); }
+.stat-value.purple { color: var(--purple); }
+.stat-value.teal   { color: var(--teal); }
+
+/* ══════════════════════════════════════════════════════════════════
+   GRILLE PRINCIPALE (alertes + detail)
+══════════════════════════════════════════════════════════════════ */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 16px;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PANEL GENERIQUE
+══════════════════════════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.panel-hdr {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title { font-size: 13px; font-weight: 600; }
+.badge {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 11px; color: var(--muted);
+}
+.badge.live {
+  background: rgba(34,197,94,0.12);
+  border-color: var(--green);
+  color: var(--green);
+}
+.badge.red {
+  background: rgba(239,68,68,0.15);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LISTE D'ALERTES
+══════════════════════════════════════════════════════════════════ */
+#alerts-list { max-height: 580px; overflow-y: auto; }
+
+.alert-item {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  animation: slide-in 0.35s ease;
+  position: relative;
+}
+@keyframes slide-in {
+  from { opacity:0; transform: translateY(-10px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+.alert-item:hover { background: var(--surface2); }
+.alert-item.active {
+  background: rgba(59,130,246,0.08);
+  border-left: 3px solid var(--blue);
+}
+.alert-item.new-flash { animation: flash-red 0.6s ease; }
+@keyframes flash-red {
+  0%,100% { background: transparent; }
+  50%      { background: rgba(239,68,68,0.15); }
+}
+
+.alert-row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.sev-pill {
+  font-size: 9px; font-weight: 700; padding: 2px 8px;
+  border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0;
+}
+.sev-CRITIQUE { background: rgba(239,68,68,0.2);  color: var(--red);    border: 1px solid var(--red); }
+.sev-ELEVE    { background: rgba(249,115,22,0.2); color: var(--orange); border: 1px solid var(--orange); }
+.sev-MOYEN    { background: rgba(59,130,246,0.2); color: var(--blue);   border: 1px solid var(--blue); }
+.sev-FAIBLE   { background: rgba(34,197,94,0.15); color: var(--green);  border: 1px solid var(--green); }
+
+.alert-type { font-size: 13px; font-weight: 600; }
+.alert-ip   { font-size: 11px; color: var(--muted); margin-left: auto; font-family: monospace; }
+.alert-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+.alert-time { font-size: 10px; color: var(--border); margin-top: 3px; }
+
+.empty-state {
+  padding: 60px 20px; text-align: center; color: var(--muted);
+}
+.empty-icon { font-size: 44px; margin-bottom: 12px; opacity: 0.4; }
+
+/* ══════════════════════════════════════════════════════════════════
+   PANNEAU DETAIL
+══════════════════════════════════════════════════════════════════ */
+.detail-right { display: flex; flex-direction: column; gap: 14px; }
+
+#detail-panel { flex: 1; }
+#detail-body  { padding: 18px; max-height: 580px; overflow-y: auto; }
+
+.detail-placeholder {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 300px; color: var(--muted); text-align: center;
+}
+.detail-placeholder .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.3; }
+
+.det-section { margin-bottom: 18px; }
+.det-label {
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+.det-text {
+  font-size: 12px; color: var(--text); line-height: 1.6;
+  background: var(--surface2); border-radius: 8px;
+  padding: 10px 12px;
+}
+
+/* Indicateurs de compromission */
+.ioc-item {
+  font-size: 11px; color: var(--muted);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  font-family: monospace;
+}
+.ioc-item:last-child { border: none; }
+
+/* Actions recommandees */
+.action-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 9px 11px; margin-bottom: 6px;
+  background: var(--surface2); border-radius: 8px;
+  font-size: 12px; line-height: 1.5;
+  border-left: 3px solid var(--green);
+  transition: border-color 0.2s;
+}
+.action-item:first-child { border-left-color: var(--red); }
+.action-item:nth-child(2) { border-left-color: var(--orange); }
+
+/* Avertissement proactif */
+.proactive-box {
+  background: rgba(168,85,247,0.08);
+  border: 1px solid rgba(168,85,247,0.4);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px; line-height: 1.6;
+  color: #C4B5FD;
+}
+
+/* Barre de confiance */
+.conf-track { height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+.conf-fill  { height: 100%; border-radius: 3px; background: var(--green); transition: width 0.6s; }
+.conf-lbl   { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   PANNEAU AGENTS
+══════════════════════════════════════════════════════════════════ */
+#agents-panel .panel-body { padding: 0; }
+.agent-row {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.agent-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0;
+  animation: pulse-dot 2s infinite;
+}
+.agent-name  { font-size: 12px; font-weight: 600; }
+.agent-ip    { font-size: 10px; color: var(--muted); font-family: monospace; }
+.agent-meta  { margin-left: auto; text-align: right; font-size: 10px; color: var(--muted); }
+.agent-empty { padding: 20px; text-align: center; color: var(--muted); font-size: 12px; }
+
+/* ══════════════════════════════════════════════════════════════════
+   TOAST NOTIFICATION
+══════════════════════════════════════════════════════════════════ */
+#toast-container {
+  position: fixed; top: 70px; right: 20px;
+  display: flex; flex-direction: column; gap: 8px;
+  z-index: 1000;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-width: 280px; max-width: 360px;
+  display: flex; align-items: flex-start; gap: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  animation: toast-in 0.3s ease;
+}
+.toast.CRITIQUE { border-left: 4px solid var(--red); }
+.toast.ELEVE    { border-left: 4px solid var(--orange); }
+.toast.MOYEN    { border-left: 4px solid var(--blue); }
+@keyframes toast-in {
+  from { opacity:0; transform: translateX(20px); }
+  to   { opacity:1; transform: translateX(0); }
+}
+@keyframes toast-out {
+  from { opacity:1; }
+  to   { opacity:0; transform: translateX(20px); }
+}
+.toast-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+.toast-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+.toast-body  { font-size: 11px; color: var(--muted); line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════════════════════ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🛡</div>
+    <div>
+      <div class="logo-title">SENTINEL PME Africa</div>
+      <div class="logo-sub">Centre d'Operations de Securite — Inspire de Wazuh</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="ws-status">
+      <div class="ws-dot" id="ws-dot"></div>
+      <span id="ws-label">Connexion...</span>
+    </div>
+    <div class="header-time" id="header-time">--:--:--</div>
+    <button class="btn-reset" onclick="resetAlerts()">Reinitialiser</button>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════════
+     CONTENEUR TOAST
+══════════════════════════════════════════════════════════════════ -->
+<div id="toast-container"></div>
+
+<div class="container">
+
+  <!-- SCORE DE RISQUE -->
+  <div class="risk-banner FAIBLE" id="risk-banner">
+    <div class="risk-gauge">
+      <svg viewBox="0 0 100 100">
+        <circle class="risk-gauge-track" cx="50" cy="50" r="40"/>
+        <circle class="risk-gauge-fill FAIBLE" id="gauge-fill" cx="50" cy="50" r="40"/>
+      </svg>
+      <div class="risk-gauge-center">
+        <div class="risk-score-num" id="risk-num">0</div>
+        <div class="risk-score-max">/100</div>
+      </div>
+    </div>
+    <div class="risk-info">
+      <div class="risk-label FAIBLE" id="risk-label">FAIBLE</div>
+      <div class="risk-subtitle" id="risk-subtitle">Aucune menace active. Surveillance en cours.</div>
+    </div>
+    <div class="risk-bar-section">
+      <div class="risk-bar-label">
+        <span>Niveau de menace global</span>
+        <span id="risk-pct">0%</span>
+      </div>
+      <div class="risk-bar-track">
+        <div class="risk-bar-fill FAIBLE" id="risk-bar"></div>
+      </div>
+      <div class="risk-bar-scale">
+        <span>FAIBLE</span><span>MOYEN</span><span>ELEVE</span><span>CRITIQUE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATISTIQUES -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total alertes</div>
+      <div class="stat-value blue" id="s-total">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Critiques</div>
+      <div class="stat-value red" id="s-critique">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Elevees</div>
+      <div class="stat-value orange" id="s-eleve">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Scans reseau</div>
+      <div class="stat-value purple" id="s-scan">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Brute force</div>
+      <div class="stat-value red" id="s-brute">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Agents actifs</div>
+      <div class="stat-value green" id="s-agents">0</div>
+    </div>
+  </div>
+
+  <!-- GRILLE PRINCIPALE -->
+  <div class="main-grid">
+
+    <!-- FLUX D'ALERTES -->
+    <div class="panel">
+      <div class="panel-hdr">
+        <span class="panel-title">Flux d'alertes en temps reel</span>
+        <span class="badge live" id="live-badge">● EN DIRECT</span>
+      </div>
+      <div id="alerts-list">
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <p style="font-size:14px;font-weight:600;margin-bottom:8px;">Surveillance active</p>
+          <p>En attente d'alertes...</p>
+          <p style="margin-top:8px;font-size:11px;opacity:0.6;">Lancez une attaque Nmap ou Hydra depuis Kali Linux</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLONNE DROITE -->
+    <div class="detail-right">
+
+      <!-- DETAIL ALERTE -->
+      <div class="panel" id="detail-panel">
+        <div class="panel-hdr">
+          <span class="panel-title">Detail de l'alerte</span>
+          <span class="badge" id="detail-sev">—</span>
+        </div>
+        <div id="detail-body">
+          <div class="detail-placeholder">
+            <div class="icon">👆</div>
+            <p>Cliquez sur une alerte<br>pour voir le detail complet,<br>les indicateurs et les actions.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENTS SENTINEL -->
+      <div class="panel" id="agents-panel">
+        <div class="panel-hdr">
+          <span class="panel-title">Agents SENTINEL</span>
+          <span class="badge" id="agent-count">0 connecte(s)</span>
+        </div>
+        <div class="panel-body" id="agent-list">
+          <div class="agent-empty">En attente d'agents...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════════════ -->
+<script>
+// ── Configuration ─────────────────────────────────────────────────────────────
+const SOC_WS  = "ws://192.168.157.10:8000/ws";
+const SOC_API = "http://192.168.157.10:8000";
+
+// ── Etat de l'application ─────────────────────────────────────────────────────
+let allAlerts   = [];
+let agentsMap   = {};
+let selectedId  = null;
+let ws          = null;
+let wsReconnect = null;
+
+// ── Horloge temps reel ────────────────────────────────────────────────────────
+setInterval(() => {
+  const now = new Date();
+  document.getElementById('header-time').textContent =
+    now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}, 1000);
+
+// ── Types d'alertes en francais ───────────────────────────────────────────────
+const THREAT_LABELS = {
+  PORT_SCAN:            '🔍 Scan de ports',
+  BRUTE_FORCE:          '🔨 Force brute',
+  RANSOMWARE_SUSPECT:   '🦠 Ransomware suspect',
+  TROJAN_C2:            '👾 Trojan C2',
+  PRIVILEGE_ESCALATION: '⬆ Elevation privileges',
+  PHISHING:             '🎣 Phishing',
+  ANOMALIE_COMPORTEMENTALE: '⚠ Anomalie comportementale',
+  MALWARE:              '💀 Malware',
+};
+
+// ── Connexion WebSocket ───────────────────────────────────────────────────────
+function connectWS() {
+  ws = new WebSocket(SOC_WS);
+
+  ws.onopen = () => {
+    document.getElementById('ws-dot').className   = 'ws-dot connected';
+    document.getElementById('ws-label').textContent = 'Connecte au SOC';
+    if (wsReconnect) { clearTimeout(wsReconnect); wsReconnect = null; }
+    console.log('[DASHBOARD] WebSocket connecte');
+  };
+
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    if (msg.type === 'INIT') {
+      allAlerts = msg.alerts || [];
+      if (msg.agents) msg.agents.forEach(a => agentsMap[a.pme_id] = a);
+      renderAll();
+      if (msg.risk_score !== undefined) updateRisk(msg.risk_score, msg.risk_label);
+    }
+    else if (msg.type === 'NEW_ALERT') {
+      allAlerts.unshift(msg.alert);
+      updateRisk(msg.risk_score, msg.risk_label);
+      renderAlerts();
+      updateStats();
+      showToast(msg.alert);
+      flashHeader();
+    }
+    else if (msg.type === 'HEARTBEAT') {
+      agentsMap[msg.agent.pme_id] = msg.agent;
+      renderAgents();
+    }
+    else if (msg.type === 'CLEAR') {
+      allAlerts = [];
+      selectedId = null;
+      renderAll();
+      updateRisk(0, 'FAIBLE');
+    }
+  };
+
+  ws.onclose = () => {
+    document.getElementById('ws-dot').className    = 'ws-dot';
+    document.getElementById('ws-label').textContent = 'Reconnexion...';
+    wsReconnect = setTimeout(connectWS, 3500);
+  };
+
+  ws.onerror = () => ws.close();
+}
+
+// ── Rendu complet ─────────────────────────────────────────────────────────────
+function renderAll() {
+  renderAlerts();
+  updateStats();
+  renderAgents();
+}
+
+// ── Rendu de la liste d'alertes ───────────────────────────────────────────────
+function renderAlerts() {
+  const list = document.getElementById('alerts-list');
+  if (allAlerts.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <p style="font-size:14px;font-weight:600;margin-bottom:8px;">Surveillance active</p>
+      <p>En attente d'alertes...</p>
+      <p style="margin-top:8px;font-size:11px;opacity:0.6;">Lancez une attaque Nmap ou Hydra depuis Kali Linux</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = allAlerts.slice(0, 60).map(a => `
+    <div class="alert-item ${selectedId === a.threat_id ? 'active' : ''}"
+         onclick="selectAlert('${a.threat_id}')">
+      <div class="alert-row1">
+        <span class="sev-pill sev-${a.severity}">${a.severity}</span>
+        <span class="alert-type">${THREAT_LABELS[a.threat_type] || a.threat_type}</span>
+        <span class="alert-ip">${a.source_ip || '?'}</span>
+      </div>
+      <div class="alert-desc">${(a.description || '').substring(0, 130)}...</div>
+      <div class="alert-time">${formatTime(a.detected_at)}</div>
+    </div>
+  `).join('');
+}
+
+// ── Selection et detail d'une alerte ─────────────────────────────────────────
+function selectAlert(id) {
+  selectedId = id;
+  const a = allAlerts.find(x => x.threat_id === id);
+  if (!a) return;
+  renderAlerts();
+
+  const sevColors = {
+    CRITIQUE: 'var(--red)', ELEVE: 'var(--orange)',
+    MOYEN: 'var(--blue)', FAIBLE: 'var(--green)'
+  };
+  const col  = sevColors[a.severity] || 'var(--muted)';
+  const conf = Math.round((a.confidence || 0.9) * 100);
+
+  document.getElementById('detail-sev').textContent  = a.severity;
+  document.getElementById('detail-sev').style.color  = col;
+  document.getElementById('detail-sev').style.borderColor = col;
+
+  const actions = (a.recommended_actions || []).map((act, i) =>
+    `<div class="action-item"><span>${act}</span></div>`
+  ).join('');
+
+  const iocs = (a.indicators || []).map(i =>
+    `<div class="ioc-item">▸ ${i}</div>`
+  ).join('');
+
+  const proactive = a.proactive_warning
+    ? `<div class="det-section">
+        <div class="det-label">⚡ Avertissement proactif</div>
+        <div class="proactive-box">${a.proactive_warning}</div>
+       </div>`
+    : '';
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="det-section">
+      <div class="det-label">Description de l'attaque</div>
+      <div class="det-text">${a.description || '—'}</div>
+    </div>
+
+    <div class="det-section">
+      <div class="det-label">Indicateurs de compromission (IOC)</div>
+      ${iocs || '<div class="det-text">Aucun indicateur specifique.</div>'}
+    </div>
+
+    <div class="det-section">
+      <div class="det-label">Confiance du modele IA</div>
+      <div class="conf-track">
+        <div class="conf-fill" style="width:${conf}%;background:${col}"></div>
+      </div>
+      <div class="conf-lbl">
+        <span>Niveau de confiance</span>
+        <strong style="color:${col}">${conf}%</strong>
+      </div>
+    </div>
+
+    ${proactive}
+
+    <div class="det-section">
+      <div class="det-label" style="color:var(--green)">✅ Actions recommandees (A faire maintenant)</div>
+      ${actions || '<div class="det-text">Aucune action requise.</div>'}
+    </div>
+
+    <div class="det-section">
+      <div class="det-label">Metadonnees de l'incident</div>
+      <div class="ioc-item">ID incident       : ${a.threat_id}</div>
+      <div class="ioc-item">Machine cible     : ${a.target_hostname || '—'} (${a.target_ip || '—'})</div>
+      <div class="ioc-item">IP attaquante     : ${a.source_ip || '—'}</div>
+      <div class="ioc-item">PME               : ${a.pme_id || '—'}</div>
+      <div class="ioc-item">Detecte le        : ${formatTime(a.detected_at)}</div>
+      <div class="ioc-item">Agent bloque IP   : ${a.blocked ? 'Oui' : 'Non'}</div>
+    </div>
+  `;
+}
+
+// ── Mise a jour du score de risque ────────────────────────────────────────────
+function updateRisk(score, label) {
+  const subtitles = {
+    FAIBLE:   'Aucune menace active. Surveillance normale en cours.',
+    MOYEN:    'Activite suspecte detectee. Restez vigilant.',
+    ELEVE:    'Attaque en cours ! Consultez les alertes et agissez.',
+    CRITIQUE: 'DANGER IMMEDIAT — Appliquez les mesures correctives maintenant !',
+  };
+
+  const pct = Math.min(100, score);
+  // Jauge SVG : circonference = 2 * pi * r = 2 * 3.14159 * 40 = 251.2
+  const offset = 251.2 - (251.2 * pct / 100);
+
+  document.getElementById('risk-num').textContent    = score;
+  document.getElementById('risk-pct').textContent    = pct + '%';
+  document.getElementById('risk-label').textContent  = label;
+  document.getElementById('risk-label').className    = `risk-label ${label}`;
+  document.getElementById('risk-subtitle').textContent = subtitles[label] || '';
+  document.getElementById('risk-bar').style.width    = pct + '%';
+  document.getElementById('risk-bar').className      = `risk-bar-fill ${label}`;
+  document.getElementById('risk-banner').className   = `risk-banner ${label}`;
+  document.getElementById('gauge-fill').className    = `risk-gauge-fill ${label}`;
+  document.getElementById('gauge-fill').style.strokeDashoffset = offset;
+}
+
+// ── Mise a jour des statistiques ──────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('s-total').textContent   = allAlerts.length;
+  document.getElementById('s-critique').textContent = allAlerts.filter(a => a.severity === 'CRITIQUE').length;
+  document.getElementById('s-eleve').textContent   = allAlerts.filter(a => a.severity === 'ELEVE').length;
+  document.getElementById('s-scan').textContent    = allAlerts.filter(a => a.threat_type === 'PORT_SCAN').length;
+  document.getElementById('s-brute').textContent   = allAlerts.filter(a => a.threat_type === 'BRUTE_FORCE').length;
+  document.getElementById('s-agents').textContent  = Object.keys(agentsMap).length;
+}
+
+// ── Rendu des agents ──────────────────────────────────────────────────────────
+function renderAgents() {
+  const list    = document.getElementById('agent-list');
+  const count   = document.getElementById('agent-count');
+  const agents  = Object.values(agentsMap);
+
+  count.textContent = `${agents.length} connecte(s)`;
+
+  if (agents.length === 0) {
+    list.innerHTML = `<div class="agent-empty">En attente d'agents SENTINEL...</div>`;
+    return;
+  }
+
+  list.innerHTML = agents.map(a => `
+    <div class="agent-row">
+      <div class="agent-dot"></div>
+      <div>
+        <div class="agent-name">${a.hostname || a.pme_id}</div>
+        <div class="agent-ip">${a.ip || '—'} | ${a.platform || 'Windows'}</div>
+      </div>
+      <div class="agent-meta">
+        CPU ${typeof a.cpu === 'number' ? a.cpu.toFixed(0) : '—'}%<br>
+        RAM ${typeof a.ram === 'number' ? a.ram.toFixed(0) : '—'}%
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Toast de notification ─────────────────────────────────────────────────────
+function showToast(a) {
+  const container = document.getElementById('toast-container');
+  const icons = { CRITIQUE: '🚨', ELEVE: '⚠️', MOYEN: '🔔', FAIBLE: '💡' };
+  const toast = document.createElement('div');
+  toast.className = `toast ${a.severity}`;
+  toast.innerHTML = `
+    <div class="toast-icon">${icons[a.severity] || '🔔'}</div>
+    <div>
+      <div class="toast-title">${THREAT_LABELS[a.threat_type] || a.threat_type} — ${a.severity}</div>
+      <div class="toast-body">${(a.description || '').substring(0, 90)}...</div>
+    </div>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'toast-out 0.3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 5500);
+}
+
+// ── Flash du header lors d'une nouvelle alerte critique ──────────────────────
+function flashHeader() {
+  const hdr = document.querySelector('header');
+  hdr.style.borderBottom = '1px solid var(--red)';
+  setTimeout(() => { hdr.style.borderBottom = '1px solid var(--border)'; }, 800);
+}
+
+// ── Reinitialisation ──────────────────────────────────────────────────────────
+async function resetAlerts() {
+  if (!confirm('Reinitialiser toutes les alertes pour la prochaine demonstration ?')) return;
+  try {
+    await fetch(SOC_API + '/api/alerts', { method: 'DELETE' });
+  } catch(e) {
+    // Si le SOC n'est pas dispo, on reinitialise quand meme localement
+  }
+  allAlerts  = [];
+  selectedId = null;
+  renderAll();
+  updateRisk(0, 'FAIBLE');
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-placeholder">
+      <div class="icon">👆</div>
+      <p>Cliquez sur une alerte pour voir le detail.</p>
+    </div>
+  `;
+}
+
+// ── Formatage de la date ──────────────────────────────────────────────────────
+function formatTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }) + ' ' +
+         d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+
+// ── Polling de secours si WebSocket echoue ───────────────────────────────────
+async function pollFallback() {
+  if (ws && ws.readyState === WebSocket.OPEN) return;
+  try {
+    const r = await fetch(SOC_API + '/api/alerts?limit=5');
+    if (r.ok) {
+      document.getElementById('ws-label').textContent = 'Polling (secours)';
+    }
+  } catch(e) {}
+}
+setInterval(pollFallback, 6000);
+
+// ── DEMARRAGE ─────────────────────────────────────────────────────────────────
+connectWS();
+</script>
+</body>
+</html>
