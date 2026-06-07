@@ -9,7 +9,8 @@
 ![Cameroun](https://img.shields.io/badge/Made%20for-PME%20Camerounaises-orange)
 
 ---
- 📌 Présentation
+
+## 📌 Présentation
 
 SENTINEL PME AFRICA est une plateforme de cybersécurité open source que nous avons conçue de A à Z dans le cadre de notre projet tutoré de Master 1 à Keyce Informatique & Intelligence Artificielle de Yaoundé. Elle regroupe nos deux filières, la Cybersécurité et l'Intelligence Artificielle, autour d'un objectif commun : offrir aux PME camerounaises un niveau de protection numérique professionnel, accessible sans expertise technique et payable en Mobile Money.
 
@@ -17,7 +18,7 @@ Le système déploie un agent léger sur les machines Windows qui surveille en t
 
 ---
 
- 🏗 Architecture
+## 🏗 Architecture
 
 ```
 ┌──────────────────┐         ┌───────────────────────┐         ┌──────────────────────┐
@@ -34,7 +35,7 @@ Le système déploie un agent léger sur les machines Windows qui surveille en t
 
 ---
 
-⚡ Fonctionnalités
+## ⚡ Fonctionnalités
 
 | Fonctionnalité | Description |
 |---|---|
@@ -49,7 +50,7 @@ Le système déploie un agent léger sur les machines Windows qui surveille en t
 
 ---
 
- 📁 Structure du projet
+## 📁 Structure du projet
 
 ```
 sentinel-pme-africa/
@@ -66,16 +67,16 @@ sentinel-pme-africa/
 
 ---
 
- 🚀 Installation rapide
+## 🚀 Installation rapide
 
- Prérequis
+### Prérequis
 
 - Ubuntu Server 22.04 LTS (SOC) — IP : `192.168.157.10`
 - Windows 10/11 (machine PME) — IP : `192.168.157.20`
 - Kali Linux (démonstration) — IP : `192.168.157.30`
 - Réseau VMware host-only `192.168.157.0/24`
 
- 1. Serveur SOC (Ubuntu)
+### 1. Serveur SOC (Ubuntu)
 
 ```bash
 git clone https://github.com/VOTRE_USERNAME/sentinel-pme-africa.git
@@ -90,7 +91,7 @@ python3 soc_server.py
 python3 -m http.server 8080
 ```
 
- 2. Agent Windows
+### 2. Agent Windows
 
 ```powershell
 pip install psutil requests cryptography
@@ -98,14 +99,14 @@ pip install psutil requests cryptography
 python sentinel_agent.py --soc-url http://192.168.157.10:8000
 ```
 
- 3. Accéder au dashboard
+### 3. Accéder au dashboard
 
 Ouvrir dans un navigateur :
 ```
 http://192.168.157.10:8080/dashboard.html
 ```
 
- 4. Lancer les attaques (Kali)
+### 4. Lancer les attaques (Kali)
 
 ```bash
 chmod +x kali_attacks.sh
@@ -114,7 +115,7 @@ chmod +x kali_attacks.sh
 
 ---
 
-🎯 Démonstration
+## 🎯 Démonstration
 
 La démonstration en 3 phases dure 10 minutes :
 
@@ -124,7 +125,7 @@ La démonstration en 3 phases dure 10 minutes :
 
 ---
 
-🔐 Sécurité cryptographique
+## 🔐 Sécurité cryptographique
 
 ```
 Chiffrement sauvegardes : RSA-2048-OAEP + AES-256-GCM (hybride)
@@ -145,27 +146,23 @@ Intégrité               : SHA-256 sur chaque rapport
 
 ---
 
- 👥 Équipe
+## 👥 Équipe
 
 Ce projet a été entièrement conçu, développé et documenté par notre équipe étudiante. Chaque ligne de code, chaque module et chaque document ont été produits par nous dans le cadre de notre formation.
 
 | Membre | Rôle |
 |---|---|
-| BELLA Marie M. | 
-| DJON | 
-| JOSEPH | 
-| EDMOND | 
+| BELLA Marie M. | Cheffe de projet, ING CYBER |
+| DJON | ING IA |
+| JOSEPH |ING IA |
+| EDMOND | ING IA |
 
- 📜 Licence
- MIT License — Libre d'utilisation, de modification et de distribution.
+📜 Licence
+MIT License — Libre d'utilisation, de modification et de distribution.
 
 
 "La cybersécurité n'est pas un luxe réservé aux grandes entreprises."
 — SENTINEL PME AFRICA, Yaoundé 2026
-
-MIT License — Libre d'utilisation, de modification et de distribution.
-
----
 
 > *"La cybersécurité n'est pas un luxe réservé aux grandes entreprises."*
 > — SENTINEL PME AFRICA, Yaoundé 2026
